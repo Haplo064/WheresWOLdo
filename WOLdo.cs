@@ -41,6 +41,7 @@ namespace WOLdo
         public void Dispose()
         {
             this.pi.UiBuilder.OnBuildUi -= DrawWindow;
+            this.pi.CommandManager.RemoveHandler("/woldo");
             terr = null;
         }
 
