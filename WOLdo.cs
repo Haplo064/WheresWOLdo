@@ -19,6 +19,11 @@ namespace WOLdo
         public ImColor col = new ImColor { Value = new Num.Vector4(1f, 1f, 1f, 1f) };
         public bool no_move = false;
         public bool config = false;
+        public bool debug = false;
+        public int align = 0;
+        public string[] alignStr = { "Left", "Middle", "Right" };
+        public float adjustX = 0;
+        public bool first = true;
 
         public void Initialize(DalamudPluginInterface pi)
         {
@@ -29,6 +34,7 @@ namespace WOLdo
             no_move = Configuration.NoMove;
             scale = Configuration.Scale;
             enabled = Configuration.Enabled;
+            align = Configuration.Align;
             terr = pi.Data.GetExcelSheet<TerritoryType>();
 
             this.pi.UiBuilder.OnBuildUi += DrawWindow;
@@ -64,7 +70,10 @@ namespace WOLdo
                 window_flags |= ImGuiWindowFlags.NoNav;
             }
             window_flags |= ImGuiWindowFlags.AlwaysAutoResize;
-            window_flags |= ImGuiWindowFlags.NoBackground;
+            if (!debug)
+            {
+                window_flags |= ImGuiWindowFlags.NoBackground;
+            }
 
 
             if (config)
@@ -76,6 +85,8 @@ namespace WOLdo
                 ImGui.ColorEdit4("Colour", ref col.Value, ImGuiColorEditFlags.NoInputs);
                 ImGui.InputFloat("Size", ref scale);
                 ImGui.Checkbox("Locked", ref no_move);
+                ImGui.Checkbox("Debug", ref debug);
+                //ImGui.ListBox("Alignment", ref align, alignStr, 3);
 
                 if (ImGui.Button("Save and Close Config"))
                 {
@@ -108,7 +119,58 @@ namespace WOLdo
                 ImGui.PushStyleColor(ImGuiCol.Text, col.Value);
                 ImGui.Begin("WOLdo", ref enabled, window_flags);
                 ImGui.SetWindowFontScale(scale);
-                ImGui.Text(location);
+                
+                if (debug)
+                {
+                    ImGui.SetWindowPos(new Num.Vector2(ImGui.GetWindowPos().X + adjustX, ImGui.GetWindowPos().Y));
+                    if (align == 0)
+                    {
+                        adjustX = 0;
+                        ImGui.Text("Left Align");
+                    }
+                    if (align == 1)
+                    {
+                        adjustX = (float)Math.Floor((ImGui.CalcTextSize("Middle Align").X) / 2);
+                        ImGui.SetWindowPos(new Num.Vector2(ImGui.GetWindowPos().X - adjustX, ImGui.GetWindowPos().Y));
+                        ImGui.Text("Middle Align");
+                    }
+                    if (align == 2)
+                    {
+                        adjustX = ImGui.CalcTextSize("Right Align").X;
+                        ImGui.SetWindowPos(new Num.Vector2(ImGui.GetWindowPos().X - adjustX, ImGui.GetWindowPos().Y));
+                        ImGui.Text("Right Align");
+                    }
+                }
+                else
+                {
+                    ImGui.SetWindowPos(new Num.Vector2(ImGui.GetWindowPos().X + adjustX, ImGui.GetWindowPos().Y));
+                    if (align == 0)
+                    {
+                        adjustX = 0;
+                    }
+                    if (align == 1)
+                    {
+                        adjustX = (float)Math.Floor((ImGui.CalcTextSize(location).X) / 2);
+                        ImGui.SetWindowPos(new Num.Vector2(ImGui.GetWindowPos().X - adjustX, ImGui.GetWindowPos().Y));
+                    }
+                    if (align == 2)
+                    {
+                        adjustX = ImGui.CalcTextSize(location).X;
+
+                        if (first)
+                        {
+                            if (adjustX != 0) { first = false; }
+                        }
+                        else
+                        {
+
+                           ImGui.SetWindowPos(new Num.Vector2(ImGui.GetWindowPos().X - adjustX, ImGui.GetWindowPos().Y));
+                        }
+                            
+                    }
+                    ImGui.Text(location);
+
+                }
                 ImGui.End();
                 ImGui.PopStyleColor();
             }
@@ -121,6 +183,7 @@ namespace WOLdo
             Configuration.Col = col;
             Configuration.Scale = scale;
             Configuration.NoMove = no_move;
+            Configuration.Align = align;
             this.pi.SavePluginConfig(Configuration);
         }
     }
@@ -132,6 +195,7 @@ namespace WOLdo
         public ImColor Col { get; set; } = new ImColor { Value = new Num.Vector4(1f,1f,1f,1f) };
         public float Scale { get; set; } = 1f;
         public bool NoMove { get; set; } = false;
+        public int Align { get; set; } = 0;
 
     }
 }
